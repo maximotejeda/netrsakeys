@@ -11,21 +11,31 @@ import (
 	"os"
 )
 
+// init create a key pair os rsa 4096 priv/pub keys
+// tuve un error en el cual el marshal en la conversion a PEM para priv y pub son distintos
+// https://www.systutorials.com/how-to-generate-rsa-private-and-public-key-pair-in-go-lang/
+// https://learn.vonage.com/blog/2020/03/13/using-jwt-for-authentication-in-a-golang-application-dr/
+// https://github.com/dgrijalva/jwt-go/blob/master/http_example_test.go
+// this reference helped me to get over it.
 // Genera las llaves en el directorio indicado
 // lo llamaremos con un where del estilo keys/
 // las llaves las genera crypt/rand por lo que no sabemos el string
 func GenerateKeyPair(where string) {
 	pub, priv := "pubRsaKey.pub", "privateRSAKey"
 	bitSize := 4096 // equals a 512 bits
-	log.Print("Iniciando generacion de llaves en: ", where)
+	//	log.Print("Iniciando generacion de llaves en: ", where)
 	_, err := os.Stat(where)
-	log.Print(err)
+	//log.Print(err)
 	if errors.Is(err, os.ErrNotExist) {
 		err := os.MkdirAll(where, 0744)
 		if err != nil {
 			log.Fatal("No es posible crear archivo. \n", err)
 		}
-		// Generamos la Private key con numeros random.
+
+		log.Print("Carpeta ./keys creada correctamente.")
+	}
+	_, err = os.Stat(where + priv)
+	if errors.Is(err, os.ErrNotExist) {
 		privateKey, err := generatePrivateKey(bitSize)
 		if err != nil {
 			log.Fatal(err)
@@ -33,8 +43,6 @@ func GenerateKeyPair(where string) {
 		// Convertimos la private key a PEM.
 		privateKeyBytes := encodePrivateKeyToPem(privateKey)
 
-		// Creamos la public a partir de la privada
-		// la funcion utiliza unformato diferente a la private para la publica
 		publicKeyBytes := encodePublicKeyToPem(privateKey)
 
 		err = writePemToFile(publicKeyBytes, where+pub)
@@ -46,6 +54,7 @@ func GenerateKeyPair(where string) {
 			log.Fatal(err)
 		}
 		log.Print("Llaves Generadas Satisfactoriamente.")
+
 	}
 	return
 
